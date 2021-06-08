@@ -1,0 +1,4 @@
+services:
+  - name: First echo
+    id: test123
+    script: config/one.sh
