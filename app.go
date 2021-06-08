@@ -13,6 +13,7 @@ import (
 	"path"
 	"path/filepath"
 	"strconv"
+	"sync"
 )
 
 type Config struct {
@@ -23,10 +24,10 @@ type Services struct {
 	Name   string `yaml:"name"`
 	Id     string `yaml:"id"`
 	Script string `yaml:"script"`
-	Busy   bool
 }
 
 var _Config Config
+var busyMap sync.Map
 
 func main() {
 	logFilePath := initLogger()
@@ -40,26 +41,31 @@ func main() {
 }
 
 func execService(id string) (string, error) {
+	busyFlag, _ := busyMap.Load(id)
+
+	if busyFlag != nil {
+		if busyFlag.(bool) {
+			return "", errors.New("service is busy")
+		}
+	}
+	busyMap.Store(id, true)
+
 	for _, service := range _Config.Services {
 		if service.Id != id {
 			continue
 		}
-		if service.Busy {
-			return "", errors.New("service is busy")
-		}
-		service.Busy = true
-		log.Infoln("Service", service.Name, "started...")
+		log.Infoln("Service \"" + service.Name + "\" started...")
 		out, err := exec.Command("sh", service.Script).Output()
 		if err != nil {
 			log.Errorln("Service", service.Name, "error:", err)
-			service.Busy = false
 			return "", err
 		}
 		log.Infoln(string(out))
 		log.Infoln("Service", service.Name, "finished...")
-		service.Busy = false
+		busyMap.Store(id, false)
 		return string(out), nil
 	}
+	busyMap.Store(id, false)
 	return "", errors.New("service not found")
 }
 
