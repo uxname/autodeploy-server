@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/timeout"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -16,6 +17,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Config struct {
@@ -118,6 +120,7 @@ func reverseAny(s interface{}) {
 func initHttpServer() {
 	const HttpPort = 9999
 	app := fiber.New(fiber.Config{
+
 		//DisableStartupMessage: true,
 	})
 
@@ -133,13 +136,13 @@ func initHttpServer() {
 		return c.SendString(result)
 	})
 
-	app.Get("/run/:id", func(c *fiber.Ctx) error {
+	app.Get("/run/:id", timeout.New(func(c *fiber.Ctx) error {
 		res, err := execService(c.Params("id"))
 		if err != nil {
 			return c.SendString("Error: " + err.Error())
 		}
 		return c.SendString(res)
-	})
+	}, 1*time.Hour))
 
 	_ = app.Listen(":" + strconv.Itoa(HttpPort))
 }
