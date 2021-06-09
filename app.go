@@ -59,7 +59,8 @@ func execService(id string) (string, error) {
 		}
 		log.Infoln(strings.Repeat("\n", 20))
 		log.Infoln("Service \"" + service.Name + "\" started...")
-		out, err := exec.Command("sh", service.Script).Output()
+		execFile, _ := filepath.Abs(path.Join(".", "config", service.Script))
+		out, err := exec.Command("sh", execFile).Output()
 		if err != nil {
 			log.Errorln("Service", service.Name, "error:", err)
 			return "", err
