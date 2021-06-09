@@ -1,1 +1,2 @@
-ping -c 10 google.com
+ping -c 2 google.com
+docker ps

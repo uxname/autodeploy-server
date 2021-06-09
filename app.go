@@ -12,12 +12,15 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"reflect"
 	"strconv"
+	"strings"
 	"sync"
 )
 
 type Config struct {
 	Services []Services `yaml:"services"`
+	LogsKey  string     `yaml:"logsKey"`
 }
 
 type Services struct {
@@ -54,6 +57,7 @@ func execService(id string) (string, error) {
 		if service.Id != id {
 			continue
 		}
+		log.Infoln(strings.Repeat("\n", 20))
 		log.Infoln("Service \"" + service.Name + "\" started...")
 		out, err := exec.Command("sh", service.Script).Output()
 		if err != nil {
@@ -86,6 +90,30 @@ func loadConfig() Config {
 	return config
 }
 
+func readFile(fname string) string {
+	file, err := os.Open(fname)
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	const MaxLength = 1000 * 10
+	buf := make([]byte, MaxLength)
+	stat, err := os.Stat(fname)
+	start := stat.Size() - MaxLength
+	_, err = file.ReadAt(buf, start)
+
+	return string(buf)
+}
+
+func reverseAny(s interface{}) {
+	n := reflect.ValueOf(s).Len()
+	swap := reflect.Swapper(s)
+	for i, j := 0, n-1; i < j; i, j = i+1, j-1 {
+		swap(i, j)
+	}
+}
+
 func initHttpServer() {
 	const HttpPort = 9999
 	app := fiber.New(fiber.Config{
@@ -93,7 +121,14 @@ func initHttpServer() {
 	})
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello👋!\nUse /run/[service id]")
+		return c.SendString("Hello👋!\nUse /run/[service id]\nor /logs")
+	})
+
+	app.Get("/logs/"+_Config.LogsKey, func(c *fiber.Ctx) error {
+		arr := strings.Split(readFile("./logs/latest.log"), "\n")
+		reverseAny(arr)
+		result := strings.TrimSpace(strings.Join(arr, "\n"))
+		return c.SendString(result)
 	})
 
 	app.Get("/run/:id", func(c *fiber.Ctx) error {
@@ -131,7 +166,11 @@ func initLogger() string {
 
 	mw := io.MultiWriter(os.Stdout, fileLogger)
 	log.SetOutput(mw)
-	log.SetFormatter(&log.TextFormatter{ForceColors: true, FullTimestamp: true})
+	log.SetFormatter(&log.TextFormatter{
+		DisableColors: true,
+		DisableQuote:  true,
+		FullTimestamp: true,
+	})
 	log.SetLevel(log.TraceLevel)
 
 	return logsFile
