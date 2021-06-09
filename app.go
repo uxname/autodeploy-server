@@ -125,7 +125,8 @@ func initHttpServer() {
 	})
 
 	app.Get("/logs/"+_Config.LogsKey, func(c *fiber.Ctx) error {
-		arr := strings.Split(readFile("./logs/latest.log"), "\n")
+		logsFile, _ := filepath.Abs(path.Join(".", "logs", "latest.log"))
+		arr := strings.Split(readFile(logsFile), "\n")
 		reverseAny(arr)
 		result := strings.TrimSpace(strings.Join(arr, "\n"))
 		return c.SendString(result)
