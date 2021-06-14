@@ -13,7 +13,6 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,6 +20,7 @@ import (
 )
 
 type Config struct {
+	Port     uint16     `yaml:"port"`
 	Services []Services `yaml:"services"`
 	LogsKey  string     `yaml:"logsKey"`
 }
@@ -109,18 +109,14 @@ func readFile(fname string) string {
 	return string(buf)
 }
 
-func reverseAny(s interface{}) {
-	n := reflect.ValueOf(s).Len()
-	swap := reflect.Swapper(s)
-	for i, j := 0, n-1; i < j; i, j = i+1, j-1 {
-		swap(i, j)
-	}
-}
-
 func initHttpServer() {
-	const HttpPort = 9999
+	var HttpPort uint16
+	if _Config.Port != 0 {
+		HttpPort = _Config.Port
+	} else {
+		HttpPort = 9999
+	}
 	app := fiber.New(fiber.Config{
-
 		//DisableStartupMessage: true,
 	})
 
@@ -130,9 +126,7 @@ func initHttpServer() {
 
 	app.Get("/logs/"+_Config.LogsKey, func(c *fiber.Ctx) error {
 		logsFile, _ := filepath.Abs(path.Join(".", "logs", "latest.log"))
-		arr := strings.Split(readFile(logsFile), "\n")
-		reverseAny(arr)
-		result := strings.TrimSpace(strings.Join(arr, "\n"))
+		result := strings.TrimSpace(readFile(logsFile))
 		return c.SendString(result)
 	})
 
@@ -144,7 +138,7 @@ func initHttpServer() {
 		return c.SendString(res)
 	}, 1*time.Hour))
 
-	_ = app.Listen(":" + strconv.Itoa(HttpPort))
+	_ = app.Listen(":" + strconv.Itoa(int(HttpPort)))
 }
 
 func initConfigDir() {

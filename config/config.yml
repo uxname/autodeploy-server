@@ -1,5 +1,6 @@
 services:
   - name: First echo
     id: test123
-    script: config/one.sh
-logsKey: QDmiurEftSFUt2qgWWw65AMsUWJLqDcF
+    script: one.sh
+logsKey: EzjmHkufBeek2BJSxbNNrbiSyCJuyynW
+port: 9999
