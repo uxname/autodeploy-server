@@ -2,6 +2,6 @@ services:
   - name: First echo
     id: test123
     script: one.sh
-logs_key: EzjmHkufBeek2BJSxbNNrbiSyCJuyynW
-logs_size_kb: 30
+logsKey: EzjmHkufBeek2BJSxbNNrbiSyCJuyynW
+logsSizeKb: 30
 port: 9999

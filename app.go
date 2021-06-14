@@ -22,8 +22,8 @@ import (
 type Config struct {
 	Port       uint16     `yaml:"port"`
 	Services   []Services `yaml:"services"`
-	LogsKey    string     `yaml:"logs_key"`
-	LogsSizeKb uint16     `yaml:"logs_size_kb"`
+	LogsKey    string     `yaml:"logsKey"`
+	LogsSizeKb uint16     `yaml:"logsSizeKb"`
 }
 
 type Services struct {
