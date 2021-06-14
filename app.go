@@ -107,7 +107,7 @@ func readFile(fname string) string {
 	if err != nil {
 		return ""
 	}
-	start := stat.Size() - int64(MaxLength)
+	start := stat.Size() - int64(MaxLength*1000)
 	_, err = file.ReadAt(buf, start)
 
 	return string(buf)
