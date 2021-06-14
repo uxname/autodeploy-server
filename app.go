@@ -101,13 +101,13 @@ func readFile(fname string) string {
 	}
 	defer file.Close()
 
-	var MaxLength = _Config.LogsSizeKb
+	var MaxLength = _Config.LogsSizeKb * 1000
 	buf := make([]byte, MaxLength)
 	stat, err := os.Stat(fname)
 	if err != nil {
 		return ""
 	}
-	start := stat.Size() - int64(MaxLength*1000)
+	start := stat.Size() - int64(MaxLength)
 	_, err = file.ReadAt(buf, start)
 
 	return string(buf)
