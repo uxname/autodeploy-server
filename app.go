@@ -20,9 +20,10 @@ import (
 )
 
 type Config struct {
-	Port     uint16     `yaml:"port"`
-	Services []Services `yaml:"services"`
-	LogsKey  string     `yaml:"logsKey"`
+	Port       uint16     `yaml:"port"`
+	Services   []Services `yaml:"services"`
+	LogsKey    string     `yaml:"logsKey"`
+	LogsSizeKb uint16     `yaml:"logs_size_kb"`
 }
 
 type Services struct {
@@ -100,10 +101,13 @@ func readFile(fname string) string {
 	}
 	defer file.Close()
 
-	const MaxLength = 1000 * 10
+	var MaxLength = _Config.LogsSizeKb
 	buf := make([]byte, MaxLength)
 	stat, err := os.Stat(fname)
-	start := stat.Size() - MaxLength
+	if err != nil {
+		return ""
+	}
+	start := stat.Size() - int64(MaxLength)
 	_, err = file.ReadAt(buf, start)
 
 	return string(buf)
