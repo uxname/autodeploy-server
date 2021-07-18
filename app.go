@@ -135,14 +135,22 @@ func initHttpServer() {
 	})
 
 	app.Get("/run/:id", timeout.New(func(c *fiber.Ctx) error {
-		res, err := execService(c.Params("id"))
-		if err != nil {
-			return c.SendString("Error: " + err.Error())
-		}
-		return c.SendString(res)
+		return processRun(c)
+	}, 1*time.Hour))
+
+	app.Post("/run/:id", timeout.New(func(c *fiber.Ctx) error {
+		return processRun(c)
 	}, 1*time.Hour))
 
 	_ = app.Listen(":" + strconv.Itoa(int(HttpPort)))
+}
+
+func processRun(c *fiber.Ctx) error {
+	res, err := execService(c.Params("id"))
+	if err != nil {
+		return c.SendString("Error: " + err.Error())
+	}
+	return c.SendString(res)
 }
 
 func initConfigDir() {
